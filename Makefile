@@ -1,4 +1,4 @@
-VERSION=`git describe --tags --always --dirty`
+VERSION		 ?= `git describe --tags --always --dirty`
 
 GO           ?= go
 GOTEST		 ?= $(GO) test
@@ -13,6 +13,8 @@ FIRST_GOPATH := $(firstword $(subst :, ,$(shell $(GO) env GOPATH)))
 PROMU_VERSION ?= 0.7.0
 PROMU         := $(FIRST_GOPATH)/bin/promu-$(PROMU_VERSION)
 PROMU_URL     := https://github.com/prometheus/promu/releases/download/v$(PROMU_VERSION)/promu-$(PROMU_VERSION).$(GO_BUILD_PLATFORM).tar.gz
+
+DOCKER_IMAGE_NAME := swoga/alertmanager-filter
 
 ifeq ($(GOHOSTARCH),amd64)
         ifeq ($(GOHOSTOS),$(filter $(GOHOSTOS),linux freebsd darwin windows))
@@ -45,29 +47,33 @@ $(PROMU):
 build-release: clean
 	$(PROMU) crossbuild
 	$(PROMU) crossbuild tarballs
-	docker build -t swoga/alertmanager-filter .
-	docker tag swoga/alertmanager-filter:latest sowga/alertmanager-filter:$(VERSION)
-	docker tag swoga/alertmanager-filter:latest quay.io/sowga/alertmanager-filter:latest
-	docker tag swoga/alertmanager-filter:latest quay.io/sowga/alertmanager-filter:$(VERSION)
+
+.PHONY: build-docker
+build-docker:
+	docker build -t $(DOCKER_IMAGE_NAME) .
+	docker tag $(DOCKER_IMAGE_NAME):latest $(DOCKER_IMAGE_NAME):$(VERSION)
+	docker tag $(DOCKER_IMAGE_NAME):latest quay.io/$(DOCKER_IMAGE_NAME):latest
+	docker tag $(DOCKER_IMAGE_NAME):latest quay.io/$(DOCKER_IMAGE_NAME):$(VERSION)
 
 .PHONY: publish-release
 publish-release: check
 	git push origin $(VERSION)
 	$(PROMU) release .tarballs
-	docker-hub
-	docker-quay
 
 .PHONY: docker-hub
 docker-hub:
-	docker login -u $DOCKER_HUB_USER -p $DOCKER_HUB_PASSWORD
-	docker push swoga/alertmanager-filter:latest
-	docker push swoga/alertmanager-filter:$(VERSION)
+	docker login -u $(DOCKER_HUB_USER) -p $(DOCKER_HUB_PASSWORD)
+	docker push $(DOCKER_IMAGE_NAME):latest
+	docker push $(DOCKER_IMAGE_NAME):$(VERSION)
 
 .PHONY: docker-quay
 docker-quay:
-	docker login quay.io -u $DOCKER_QUAY_USER -p $DOCKER_QUAY_PASSWORD
-	docker push quay.io/swoga/alertmanager-filter:latest
-	docker push quay.io/swoga/alertmanager-filter:$(VERSION)
+	docker login quay.io -u $(DOCKER_QUAY_USER) -p $(DOCKER_QUAY_PASSWORD)
+	docker push quay.io/$(DOCKER_IMAGE_NAME):latest
+	docker push quay.io/$(DOCKER_IMAGE_NAME):$(VERSION)
+
+.PHONY: publish-docker
+publish-docker: docker-hub docker-quay
 
 .PHONY: check
 check:
@@ -83,7 +89,7 @@ clean:
 	rm -f alertmanager-filter
 
 .PHONY: release
-release: check test build-release publish-release
+release: check test build-release build-docker publish-release publish-docker
 
 .PHONY: test
 test:
