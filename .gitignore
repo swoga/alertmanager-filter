@@ -1,0 +1,5 @@
+# ignore folders starting with .
+.*/
+!/.licenses/
+# ignore binary in root folder
+/alertmanager-filter
