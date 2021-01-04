@@ -35,7 +35,7 @@ time_intervals:
 
 receivers:
   # map key is the name of the alertmanager receiver
-  <string>: [ <receiver>, ... ]
+  <string>: <receiver>
 ```
 
 ### `<time_interval>`
