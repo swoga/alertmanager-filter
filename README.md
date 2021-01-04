@@ -37,7 +37,7 @@ receivers:
   <string>: [ <receiver>, ... ]
 ```
 
-### <time_interval>
+### `<time_interval>`
 ```yaml
 years: ['2019', '2021:2025', ... ]
 months: ['1', '3:5', 'august', 'september:december', ... ]
@@ -49,7 +49,7 @@ times:
   - ...
 ```
 
-### <receiver>
+### `<receiver>`
 see [<http_config>](https://prometheus.io/docs/alerting/latest/configuration/#http_config)
 ```yaml
 target:
@@ -59,7 +59,7 @@ target:
 rules: [ <rule>, ... ]
 ```
 
-### <rule>
+### `<rule>`
 Evalutes true if any `match` and no `not_match` evaluted true.
 Please see [example.yml](blob/master/example.yml) for some pseudo code on how the evaluation is performed.
 ```yaml
@@ -67,7 +67,7 @@ match: [ <match>, ... ]
 not_match: [ <match>, ... ]
 ```
 
-### <match>
+### `<match>`
 Evalutes true if all labels and the time match one of their array values.
 ```yaml
 labels:
@@ -77,4 +77,4 @@ times: [ <string>, ... ]
 ```
 
 ## Building
-You can either build with `go build` or to build with `promu` use `make`
+You can either build with `go build ./cmd/alertmanager-filter/` or to build with `promu` use `make build`
