@@ -60,7 +60,7 @@ rules: [ <rule>, ... ]
 ```
 
 ### `<rule>`
-Evalutes true if any `match` and no `not_match` evaluted true.
+Evaluates true if any `match` and no `not_match` evaluated true.  
 Please see [example.yml](blob/master/example.yml) for some pseudo code on how the evaluation is performed.
 ```yaml
 match: [ <match>, ... ]
@@ -68,7 +68,7 @@ not_match: [ <match>, ... ]
 ```
 
 ### `<match>`
-Evalutes true if all labels and the time match one of their array values.
+Evaluates true if all labels and the time match one of their array values.
 ```yaml
 labels:
   <string>: [ <string>, ... ]
