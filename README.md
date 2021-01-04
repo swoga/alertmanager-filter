@@ -61,7 +61,7 @@ rules: [ <rule>, ... ]
 
 ### `<rule>`
 Evaluates true if any `match` and no `not_match` evaluated true.  
-Please see [example.yml](blob/master/example.yml) for some pseudo code on how the evaluation is performed.
+Please see [example.yml](example.yml) for some pseudo code on how the evaluation is performed.
 ```yaml
 match: [ <match>, ... ]
 not_match: [ <match>, ... ]
