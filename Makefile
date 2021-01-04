@@ -54,6 +54,8 @@ build-docker:
 	docker tag $(DOCKER_IMAGE_NAME):latest $(DOCKER_IMAGE_NAME):$(VERSION)
 	docker tag $(DOCKER_IMAGE_NAME):latest quay.io/$(DOCKER_IMAGE_NAME):latest
 	docker tag $(DOCKER_IMAGE_NAME):latest quay.io/$(DOCKER_IMAGE_NAME):$(VERSION)
+	docker tag $(DOCKER_IMAGE_NAME):latest ghcr.io/$(DOCKER_IMAGE_NAME):latest
+	docker tag $(DOCKER_IMAGE_NAME):latest ghcr.io/$(DOCKER_IMAGE_NAME):$(VERSION)
 
 .PHONY: publish-release
 publish-release: check
@@ -72,8 +74,14 @@ docker-quay:
 	docker push quay.io/$(DOCKER_IMAGE_NAME):latest
 	docker push quay.io/$(DOCKER_IMAGE_NAME):$(VERSION)
 
+.PHONY: docker-github
+docker-github:
+	docker login ghcr.io -u $(GITHUB_USER) -p $(GITHUB_TOKEN)
+	docker push ghcr.io/$(DOCKER_IMAGE_NAME):latest
+	docker push ghcr.io/$(DOCKER_IMAGE_NAME):$(VERSION)
+
 .PHONY: publish-docker
-publish-docker: docker-hub docker-quay
+publish-docker: docker-hub docker-quay docker-github
 
 .PHONY: check
 check:

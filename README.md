@@ -9,10 +9,11 @@ We dislike the proposed muting because we more wanted a ruleset of who is oncall
 
 ## Docker image
 
-Docker image is available on Docker Hub and Quay.io
+Docker image is available on Docker Hub, Quay.io and GitHub
 
 `docker pull swoga/alertmanager-filter`  
-`docker pull quay.io/swoga/alertmanager-filter`
+`docker pull quay.io/swoga/alertmanager-filter`  
+`docker pull ghcr.io/swoga/alertmanager-filter`
 
 You just need to map your config file into the container at `/etc/alertmanager-filter/config.yml`  
 `docker run -v config.yml:/etc/alertmanager-filter/config.yml swoga/alertmanager-filter`
