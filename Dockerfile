@@ -1,6 +1,7 @@
 ARG ARCH="amd64"
 ARG OS="linux"
 FROM quay.io/prometheus/busybox-${OS}-${ARCH}:latest
+LABEL org.opencontainers.image.source https://github.com/swoga/alertmanager-filter
 
 ARG ARCH="amd64"
 ARG OS="linux"
