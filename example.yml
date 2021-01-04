@@ -1,0 +1,55 @@
+time_intervals:
+  holidays:
+    - months: ['12']
+      days_of_month: ['24:26', '31']
+    - months: ['1']
+      days_of_month: ['1']
+  office_hours:
+    - weekdays: ['monday:friday']
+      times:
+        - start_time: '08:00'
+          end_time: '21:00'
+  weekend:
+    - weekdays: ['saturday', 'sunday']
+
+receivers:
+  main:
+    target:
+      url: 'http://webhook-receiver/alert'
+    rules:
+      # pseudo code for the following rule
+      #   (
+      #       (severity == critical || severity == warning)
+      #     ||
+      #       (cluster == cluY)
+      #   )
+      # &&
+      #   !(
+      #       (
+      #           (instance == devX || instance == devY)
+      #         && 
+      #           cluster == cluX
+      #       )
+      #     || 
+      #       job == devZ
+      #   )
+      - match:
+          - labels:
+              severity: [critical, warning]
+          - labels:
+              cluster: [cluY]
+        not_match:
+          - labels:
+              instance: [devX, devY]
+              cluster: [cluX]
+          - labels:
+              job: [devZ]
+      # pseudo code for the following rule
+      #   (time IN office_hours || time IN weekend)
+      # &&
+      #   !time IN holidays
+      - match:
+          - times: ['office_hours', 'weekend']
+        not_match:
+          - times: ['holidays']
+          
