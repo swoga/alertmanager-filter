@@ -25,7 +25,7 @@ You just need to map your config file into the container at `/etc/alertmanager-f
 
 ## Configuration file
 ```yaml
-listen: <string> | default = :80
+listen: <string> | default = :9776
 metrics_path: <string> | default = /metrics
 alerts_path: <string> | default = /alerts
 

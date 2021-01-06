@@ -16,7 +16,7 @@ type TimeIntervalsMap map[string][]timeinterval.TimeInterval
 
 func DefaultConfig() Config {
 	return Config{
-		Listen:      ":80",
+		Listen:      ":9776",
 		MetricsPath: "/metrics",
 		AlertsPath:  "/alerts",
 	}

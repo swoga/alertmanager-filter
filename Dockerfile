@@ -11,7 +11,7 @@ COPY example.yml /etc/alertmanager-filter/config.yml
 RUN chown -R nobody:nobody /etc/alertmanager-filter
 
 USER nobody
-EXPOSE 80
+EXPOSE 9776
 
 ENTRYPOINT ["/bin/alertmanager-filter"]
 CMD ["--config.file=/etc/alertmanager-filter/config.yml"]
