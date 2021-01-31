@@ -42,6 +42,10 @@ func (m *Match) IsLabelMatch(labels map[string]string) bool {
 }
 
 func (m *Match) IsTimeMatch(timeIntervalsMap TimeIntervalsMap, time time.Time) bool {
+	if len(m.Times) == 0 {
+		return true
+	}
+
 	for _, name := range m.Times {
 		timeIntervals, ok := timeIntervalsMap[name]
 		if !ok {
@@ -55,5 +59,6 @@ func (m *Match) IsTimeMatch(timeIntervalsMap TimeIntervalsMap, time time.Time) b
 		}
 
 	}
+
 	return false
 }
