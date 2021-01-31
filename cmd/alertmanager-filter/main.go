@@ -104,9 +104,9 @@ func main() {
 
 func handleRequest(w http.ResponseWriter, r *http.Request) {
 	// create local log variable, so that no one accidentally uses the global one
-	log := log
+	log := log.With(zap.String("remote", r.RemoteAddr))
 
-	log.Debug("incoming request", zap.String("from", r.RemoteAddr))
+	log.Debug("incoming request")
 
 	ctx, cancel := context.WithTimeout(r.Context(), time.Duration(20*time.Second))
 	defer cancel()
@@ -115,35 +115,40 @@ func handleRequest(w http.ResponseWriter, r *http.Request) {
 	c := sc.Get()
 
 	message, err := decodeMessage(r.Body)
-
-	if err == nil {
-		log = log.With(zap.String("receiver", message.Receiver))
-		log.Debug("received message", zap.Any("message", message))
-	}
-
-	var receiver *config.Receiver
-	if err == nil {
-		receiver, err = getReceiver(c.Receivers, *message)
-	}
-
-	if err == nil {
-		message, err = filterAlerts(c.TimeIntervals, *receiver, *message)
-	}
-
-	if err == nil {
-		if message != nil {
-			log.Debug("send message", zap.Any("message", message))
-			err = sendAlert(ctx, log, w, r, receiver.Target, *message)
-		} else {
-			log.Debug("no alerts to forward")
-		}
-	}
-
 	if err != nil {
-		log.Error(err.Error())
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		requestError(log, w, err)
 		return
 	}
+
+	log = log.With(zap.String("receiver", message.Receiver))
+	log.Debug("received message", zap.Any("message", message))
+
+	receiver, err := getReceiver(c.Receivers, *message)
+	if err != nil {
+		requestError(log, w, err)
+		return
+	}
+
+	message, err = filterAlerts(c.TimeIntervals, *receiver, *message)
+	if err != nil {
+		requestError(log, w, err)
+		return
+	}
+
+	log.Debug("send message", zap.Any("message", message))
+	if message != nil {
+		err = sendAlert(ctx, log, w, r, receiver.Target, *message)
+
+		if err != nil {
+			requestError(log, w, err)
+			return
+		}
+	}
+}
+
+func requestError(log *zap.Logger, w http.ResponseWriter, err error) {
+	log.Error(err.Error())
+	http.Error(w, err.Error(), http.StatusInternalServerError)
 }
 
 func decodeMessage(reader io.Reader) (*webhook.Message, error) {
