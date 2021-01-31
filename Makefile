@@ -6,7 +6,7 @@ GOHOSTOS     ?= $(shell $(GO) env GOHOSTOS)
 GOHOSTARCH   ?= $(shell $(GO) env GOHOSTARCH)
 GO_BUILD_PLATFORM ?= $(GOHOSTOS)-$(GOHOSTARCH)
 PREFIX       ?= $(shell pwd)
-GO_LICENSE_DETECTOR ?= ../../../go.elastic.co/go-licence-detector/go-licence-detector
+GO_LICENSE_DETECTOR ?= go-licence-detector
 
 FIRST_GOPATH := $(firstword $(subst :, ,$(shell $(GO) env GOPATH)))
 
