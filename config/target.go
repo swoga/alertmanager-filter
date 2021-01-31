@@ -1,10 +1,14 @@
 package config
 
 import (
+	"bytes"
+	"io/ioutil"
 	"net/http"
+	"net/http/httputil"
 
 	am_config "github.com/prometheus/alertmanager/config"
 	commoncfg "github.com/prometheus/common/config"
+	"go.uber.org/zap"
 )
 
 type Target struct {
@@ -27,4 +31,37 @@ func (t *Target) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	t.HTTPClient = client
 
 	return nil
+}
+
+func (t *Target) CreateProxy(log *zap.Logger) (*httputil.ReverseProxy, error) {
+	director := func(req *http.Request) {
+		req.URL = t.URL.URL
+	}
+	proxy := &httputil.ReverseProxy{Director: director}
+	proxy.Transport = t.HTTPClient.Transport
+	stdLog, err := zap.NewStdLogAt(log, zap.ErrorLevel)
+	if err != nil {
+		return nil, err
+	}
+	proxy.ErrorLog = stdLog
+
+	if log.Core().Enabled(zap.DebugLevel) {
+		proxy.ModifyResponse = func(res *http.Response) error {
+			defer res.Body.Close()
+			data, err := ioutil.ReadAll(res.Body)
+			if err != nil {
+				return err
+			}
+			log.Debug("target response", zap.String("data", string(data)))
+
+			buf := bytes.NewReader(data)
+			reader := ioutil.NopCloser(buf)
+
+			res.Body = reader
+
+			return nil
+		}
+	}
+
+	return proxy, nil
 }

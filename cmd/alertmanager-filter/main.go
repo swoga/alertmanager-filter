@@ -7,13 +7,13 @@ import (
 	"flag"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
 
-	"github.com/prometheus/alertmanager/notify"
 	"github.com/prometheus/alertmanager/notify/webhook"
 	"github.com/prometheus/alertmanager/template"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -103,6 +103,11 @@ func main() {
 }
 
 func handleRequest(w http.ResponseWriter, r *http.Request) {
+	// create local log variable, so that no one accidentally uses the global one
+	log := log
+
+	log.Debug("incoming request", zap.String("from", r.RemoteAddr))
+
 	ctx, cancel := context.WithTimeout(r.Context(), time.Duration(20*time.Second))
 	defer cancel()
 	r = r.WithContext(ctx)
@@ -128,7 +133,7 @@ func handleRequest(w http.ResponseWriter, r *http.Request) {
 	if err == nil {
 		if message != nil {
 			log.Debug("send message", zap.Any("message", message))
-			err = sendAlert(ctx, receiver.Target, *message)
+			err = sendAlert(ctx, log, w, r, receiver.Target, *message)
 		} else {
 			log.Debug("no alerts to forward")
 		}
@@ -139,8 +144,6 @@ func handleRequest(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-
-	w.WriteHeader(http.StatusOK)
 }
 
 func decodeMessage(reader io.Reader) (*webhook.Message, error) {
@@ -185,7 +188,7 @@ func filterAlerts(timeIntervalsMap config.TimeIntervalsMap, receiver config.Rece
 	return &message, nil
 }
 
-func sendAlert(ctx context.Context, target config.Target, message webhook.Message) error {
+func sendAlert(ctx context.Context, log *zap.Logger, w http.ResponseWriter, r *http.Request, target config.Target, message webhook.Message) error {
 	var buf bytes.Buffer
 	encoder := json.NewEncoder(&buf)
 	err := encoder.Encode(message)
@@ -193,24 +196,14 @@ func sendAlert(ctx context.Context, target config.Target, message webhook.Messag
 		return err
 	}
 
-	req, err := http.NewRequestWithContext(ctx, "POST", target.URL.String(), &buf)
+	r.Body = ioutil.NopCloser(&buf)
+
+	proxy, err := target.CreateProxy(log)
 	if err != nil {
 		return err
 	}
-
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("User-Agent", "Alertmanager-Filter")
-
-	res, err := target.HTTPClient.Do(req)
-	if err != nil {
-		return err
-	}
-
-	notify.Drain(res)
-
-	if res.StatusCode/100 != 2 {
-		return fmt.Errorf("invalid status code: %d", res.StatusCode)
-	}
+	log.Debug("forward message", zap.Any("url", target.URL.URL))
+	proxy.ServeHTTP(w, r)
 
 	return nil
 }
