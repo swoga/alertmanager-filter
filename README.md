@@ -1,3 +1,5 @@
+**This repo is no longer under development, as the functionality is now available in Alertmanager!**
+
 # alertmanager-filter
 `alertmanager-filter` receives webhooks from [Prometheus Alertmanager](https://prometheus.io/docs/alerting/latest/alertmanager), filters and forwards them by a ruleset.  
 These rules can consist of labels and/or the time when the webhook was received.
